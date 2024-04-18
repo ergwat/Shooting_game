@@ -19,27 +19,27 @@ def is_point_in_circle(point_x, point_y, center_x, center_y, radius):
 
 
 
-def points_calculation(point_x, point_y, center_x, center_y):
-    distance = ((point_x - center_x) ** 2 + (point_y - center_y) ** 2) ** 0.5
-    if distance <= radius / 6:
+def points_calculation(mouse_x, mouse_y, circle_center_x, circle_center_y, points):
+    distance = ((mouse_x - circle_center_x) ** 2 + (mouse_y - circle_center_y) ** 2) ** 0.5
+    if distance <= radius / 7:
         points += 10
-        message = "В десяточку!!!"
-    elif distance <= radius / 6 * 2:
+        message = random.choice(["В десяточку!!!", "Бинго!", "Есть пробитие!", "В яблочко!"])
+    elif distance <= radius / 7 * 2:
         points += 9
-        message = "Девять! Отлично"
-    elif distance <= radius / 6 * 3:
+        message = random.choice(["Девять! Отлично", "Почти в центр!"])
+    elif distance <= radius / 7 * 3:
         points += 8
-        message = "Восьмёрка"
-    elif distance <= radius / 6 * 4:
+        message = random.choice(["Восьмёрка", "Восемь"])
+    elif distance <= radius / 7 * 4:
         points += 7
-        message = "Семь!"
-    elif distance <= radius / 6 * 5:
+        message = random.choice(["Семь!", "Семёрка"])
+    elif distance <= radius / 7 * 5:
         points += 6
-        message = "Шесть баллов!"
+        message = random.choice(["Шесть баллов!", "Шесть тоже неплохо"])
     elif distance <= radius:
-        points += 6
-        message = "Пятёрка!"
-
+        points += 5
+        message = random.choice(["Пятёрка!", "Попал!"])
+    return points, message
 
 # задаём константы и параметры рабочего окна
 # =====================================================
@@ -67,6 +67,7 @@ total_clicks = 0  # Общее количество кликов
 hits = 0  # Количество попаданий по мишени
 accuracy = 0 # Точность в %
 points = 0 # Очки за "качество" попадания: чем ближе к центру, тем лучше
+message = ""
 # =====================================================
 
 
@@ -107,8 +108,9 @@ while running:
             # Проверка, попала ли пуля в мишень:
             if is_point_in_circle(mouse_x, mouse_y, circle_center_x, circle_center_y, radius):
                 hits += 1 # Плюс одно попадание
-                points += 5 # Пока только 5, без яблочка =)
-                accuracy=acc(hits, total_clicks)
+                #points += 5 # Пока только 5, без яблочка =)
+                accuracy = acc(hits, total_clicks)
+                points, message = points_calculation(mouse_x, mouse_y, circle_center_x, circle_center_y, points)
 
                 # Перемещение мишени в случайное место на экране после попадания
                 target_x = random.randint(0, SCREEN_WIDTH - target_width)
@@ -117,11 +119,15 @@ while running:
                 y_direction = random.randint(-2, 3)
 
     # Отображаем текст счета в верхней части экрана по центру
-    score_text = f"Кликов: {total_clicks} Попаданий: {hits} Очков: {points} Точность: {accuracy:.0f}%" # Округляем точность до 0 знаков после запятой
+    score_text = f"Кликов: {total_clicks} Попаданий: {hits} Точность: {accuracy:.0f}%" # Округляем точность до 0 знаков после запятой
     score_surface = font.render(score_text, True, (255, 255, 255))  # Белый цвет текста
+    message_surface = font.render(f'{message} + {points} очков', True, (255, 255, 255))  # Белый цвет текста
     # Вычисляем X позицию для центрирования текста
     score_x = (SCREEN_WIDTH - score_surface.get_width()) / 2
     screen.blit(score_surface, (score_x, 10))  # 10 пикселей от верхнего края экрана
+
+    message_x = (SCREEN_WIDTH - message_surface.get_width()) / 2
+    screen.blit(message_surface, (message_x, 50))  # 10 пикселей от верхнего края экрана
 
 
     # Обновление экрана
