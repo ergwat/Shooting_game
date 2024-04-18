@@ -11,6 +11,36 @@ def acc (hits, total_clicks):
     return accuracy
 
 
+# Функция для проверки находится ли точка внутри круга
+def is_point_in_circle(point_x, point_y, center_x, center_y, radius):
+    # Расстояние от точки до центра круга
+    distance = ((point_x - center_x) ** 2 + (point_y - center_y) ** 2) ** 0.5
+    return distance <= radius
+
+
+
+def points_calculation(point_x, point_y, center_x, center_y):
+    distance = ((point_x - center_x) ** 2 + (point_y - center_y) ** 2) ** 0.5
+    if distance <= radius / 6:
+        points += 10
+        message = "В десяточку!!!"
+    elif distance <= radius / 6 * 2:
+        points += 9
+        message = "Девять! Отлично"
+    elif distance <= radius / 6 * 3:
+        points += 8
+        message = "Восьмёрка"
+    elif distance <= radius / 6 * 4:
+        points += 7
+        message = "Семь!"
+    elif distance <= radius / 6 * 5:
+        points += 6
+        message = "Шесть баллов!"
+    elif distance <= radius:
+        points += 6
+        message = "Пятёрка!"
+
+
 # задаём константы и параметры рабочего окна
 # =====================================================
 SCREEN_WIDTH = 800
@@ -23,22 +53,26 @@ pygame.display.set_icon(icon)
 target_image = pygame.image.load("img/target.png")
 target_width = 80
 target_height = 80
+radius = target_width / 2
 
 target_x = random.randint(0, SCREEN_WIDTH-target_width)
 target_y = random.randint(0, SCREEN_HEIGHT-target_height)
 color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+# Координаты центра круга
+target_center_x = target_x + radius
+target_center_y = target_y + radius
+
 
 total_clicks = 0  # Общее количество кликов
 hits = 0  # Количество попаданий по мишени
-accuracy=0
+accuracy = 0 # Точность в %
+points = 0 # Очки за "качество" попадания: чем ближе к центру, тем лучше
 # =====================================================
 
 
-# ... Предыдущая часть кода ...
-
-TARGET_SPEED = 0.2  # Скорость, с которой мишень будет двигаться
-x_direction = random.randint(-10, 10)  # Начальное направление движения мишени по оси X (1 для право, -1 для лево)
-y_direction = random.randint(-10, 10)  # Начальное направление движения мишени по оси Y (1 для вниз, -1 для вверх)
+TARGET_SPEED = 2  # Скорость, с которой мишень будет двигаться
+x_direction = random.randint(-10, 10) / 5  # Начальное направление движения мишени по оси X (1 для право, -1 для лево)
+y_direction = random.randint(-10, 10) / 5  # Начальное направление движения мишени по оси Y (1 для вниз, -1 для вверх)
 
 # ... Предыдущая часть кода ...
 
@@ -48,8 +82,8 @@ while running:
     screen.fill(color)
 
     # Обновление позиции мишени
-    target_x += TARGET_SPEED * x_direction/5
-    target_y += TARGET_SPEED * y_direction/5
+    target_x += TARGET_SPEED / 10 * x_direction
+    target_y += TARGET_SPEED / 10 * y_direction
 
     # Проверка на выход мишени за пределы экрана
     if target_x <= 0 or target_x >= SCREEN_WIDTH - target_width:
@@ -59,6 +93,8 @@ while running:
 
     # Отображение мишени
     screen.blit(target_image, (target_x, target_y))
+    circle_center_x = target_x + radius
+    circle_center_y = target_y + radius
 
     # Обработка событий
     for event in pygame.event.get():
@@ -68,18 +104,20 @@ while running:
             total_clicks += 1 # Плюс один выстрел
             accuracy=acc(hits, total_clicks)
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            # Проверка, попала ли пуля в мишень
-            if target_x < mouse_x < target_x + target_width and target_y < mouse_y < target_y + target_height:
+            # Проверка, попала ли пуля в мишень:
+            if is_point_in_circle(mouse_x, mouse_y, circle_center_x, circle_center_y, radius):
                 hits += 1 # Плюс одно попадание
+                points += 5 # Пока только 5, без яблочка =)
                 accuracy=acc(hits, total_clicks)
+
                 # Перемещение мишени в случайное место на экране после попадания
                 target_x = random.randint(0, SCREEN_WIDTH - target_width)
                 target_y = random.randint(0, SCREEN_HEIGHT - target_height)
-                x_direction = random.randint(-10, 11)
-                y_direction = random.randint(-10, 11)
+                x_direction = random.randint(-2, 3)
+                y_direction = random.randint(-2, 3)
 
     # Отображаем текст счета в верхней части экрана по центру
-    score_text = f"Кликов: {total_clicks} Попаданий: {hits} Точность: {accuracy:.0f}%" # Округляем точность до 0 знаков после запятой
+    score_text = f"Кликов: {total_clicks} Попаданий: {hits} Очков: {points} Точность: {accuracy:.0f}%" # Округляем точность до 0 знаков после запятой
     score_surface = font.render(score_text, True, (255, 255, 255))  # Белый цвет текста
     # Вычисляем X позицию для центрирования текста
     score_x = (SCREEN_WIDTH - score_surface.get_width()) / 2
